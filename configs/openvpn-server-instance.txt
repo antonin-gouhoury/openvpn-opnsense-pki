@@ -1,0 +1,40 @@
+# Récapitulatif des paramètres OpenVPN
+# Projet BTS SIO SISR — Antonin Gouhoury
+#
+# Ce fichier liste les paramètres saisis dans l'interface OPNsense pour
+# l'instance OpenVPN. Il sert de référence pour reproduire la configuration.
+
+[Paramètres généraux]
+Rôle             = Serveur
+Protocole        = UDP4              # IMPORTANT: UDP4 et non UDP (voir troubleshooting)
+Port             = 1194              # Port standard OpenVPN
+Type             = TUN               # Niveau 3 (couche IP)
+Verbosity        = 3                 # Niveau de logs équilibré
+
+[Trust]
+Certificat serveur                = (issu de la CA interne)
+Autorité de certification         = (CA interne créée pour le projet)
+Vérification du certificat client = required          # ← double authentification
+Data Ciphers                      = (recommandés OPNsense)
+
+[Authentification]
+Source                = Local Database
+Groupe imposé         = Groupe_Teletravail
+                        # → Seuls les membres de ce groupe pourront se connecter
+
+[Routage]
+Réseau du tunnel (Server IPv4)    = 10.10.0.0/24
+Réseau local poussé aux clients   = (réseau du VLAN Serveurs)
+
+[Côté utilisateur]
+Pour chaque utilisateur autorisé :
+  - Compte créé dans la base locale OPNsense (login + mot de passe complexe)
+  - Membre du groupe Groupe_Teletravail
+  - Certificat client individuel signé par la CA
+  - Profil .ovpn généré via le plugin os-openvpn-legacy
+
+[Côté serveur de fichiers Windows]
+Partage Entreprise_DATA :
+  - Permission SMB : tout le monde (filtrage côté NTFS)
+  - ACL NTFS       : groupe Groupe_Telétravail uniquement (Modification)
+                     → défense en profondeur en complément du VPN
